@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Bite Lab Dashboard</title>
+<meta name="theme-color" content="#D3261C">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- Not set up yet -->
+<section class="screen center" id="screen-setup" hidden>
+  <div class="panel">
+    <p class="logo">Bite Lab<span>.ng</span></p>
+    <h1>Dashboard not connected yet</h1>
+    <p>Add your Supabase Project URL and anon key to <strong>app.js</strong> (CONFIG.supabaseUrl and CONFIG.supabaseAnonKey), then upload the site again. The setup guide explains each step.</p>
+  </div>
+</section>
+
+<!-- Sign in -->
+<section class="screen center" id="screen-login" hidden>
+  <form class="panel" id="login-form" novalidate>
+    <p class="logo">Bite Lab<span>.ng</span></p>
+    <h1>Owner sign in</h1>
+    <label for="l-email">Email</label>
+    <input id="l-email" type="email" autocomplete="email" required>
+    <label for="l-pass">Password</label>
+    <input id="l-pass" type="password" autocomplete="current-password" required>
+    <p class="err" id="login-err" role="alert" hidden></p>
+    <button class="btn btn-red btn-block" type="submit" id="login-btn">Sign in</button>
+    <button class="linkish" type="button" id="forgot-btn">Forgot password?</button>
+  </form>
+</section>
+
+<!-- New password (after reset link) -->
+<section class="screen center" id="screen-reset" hidden>
+  <form class="panel" id="reset-form" novalidate>
+    <p class="logo">Bite Lab<span>.ng</span></p>
+    <h1>Choose a new password</h1>
+    <label for="r-pass">New password (at least 8 characters)</label>
+    <input id="r-pass" type="password" autocomplete="new-password" minlength="8" required>
+    <p class="err" id="reset-err" role="alert" hidden></p>
+    <button class="btn btn-red btn-block" type="submit">Save password</button>
+  </form>
+</section>
+
+<!-- Not allowed -->
+<section class="screen center" id="screen-denied" hidden>
+  <div class="panel">
+    <p class="logo">Bite Lab<span>.ng</span></p>
+    <h1>This account can't open the dashboard</h1>
+    <p>Sign in with the owner's email, or ask the owner to add your email to the admins list.</p>
+    <button class="btn btn-ghost btn-block" type="button" data-signout>Sign out</button>
+  </div>
+</section>
+
+<!-- App -->
+<div id="app" hidden>
+  <header class="topbar">
+    <p class="logo">Bite Lab<span>.ng</span></p>
+    <p class="live" id="live"><span class="dot"></span><span id="live-text">Live</span></p>
+  </header>
+
+  <main class="content">
+    <!-- ORDERS -->
+    <section class="tab" id="tab-orders" aria-labelledby="t-orders">
+      <div class="tab-head">
+        <h1 id="t-orders">Orders</h1>
+        <button class="btn btn-red" type="button" id="add-order-btn">+ Add order</button>
+      </div>
+      <div class="chips" role="tablist" aria-label="Filter orders" id="order-filters">
+        <button class="chip on" data-filter="active" type="button">Active <span class="n" id="n-active">0</span></button>
+        <button class="chip" data-filter="Delivered" type="button">Delivered</button>
+        <button class="chip" data-filter="Cancelled" type="button">Cancelled</button>
+        <button class="chip" data-filter="all" type="button">All</button>
+      </div>
+      <input class="search" id="order-search" type="search" placeholder="Search name, phone or order number" aria-label="Search orders">
+      <div id="order-list" class="list"></div>
+    </section>
+
+    <!-- SALES -->
+    <section class="tab" id="tab-sales" hidden aria-labelledby="t-sales">
+      <div class="tab-head">
+        <h1 id="t-sales">Sales</h1>
+        <button class="btn btn-ghost" type="button" id="csv-btn">Download CSV</button>
+      </div>
+      <div class="chips" id="period-chips">
+        <button class="chip on" data-period="today" type="button">Today</button>
+        <button class="chip" data-period="week" type="button">This week</button>
+        <button class="chip" data-period="month" type="button">This month</button>
+      </div>
+      <p class="muted small" id="period-label"></p>
+      <div class="stats" id="stats"></div>
+      <div class="card">
+        <h2>Daily sales this month</h2>
+        <div id="daily-chart" class="chart"></div>
+      </div>
+      <div class="card">
+        <h2>Best sellers</h2>
+        <div id="best" class="table-wrap"></div>
+      </div>
+      <div class="card">
+        <h2>Busiest hours</h2>
+        <div id="hours"></div>
+      </div>
+      <p class="muted small">Sales count every order except cancelled ones. "Paid" counts orders you've marked as paid.</p>
+    </section>
+
+    <!-- MENU -->
+    <section class="tab" id="tab-menu" hidden aria-labelledby="t-menu">
+      <div class="tab-head">
+        <h1 id="t-menu">Menu</h1>
+        <button class="btn btn-red" type="button" id="add-item-btn">+ Add item</button>
+      </div>
+      <p class="muted small">Switch an item off to hide it from the website. Changes show on the website straight away.</p>
+      <div id="menu-list"></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="tab" id="tab-settings" hidden aria-labelledby="t-settings">
+      <div class="tab-head"><h1 id="t-settings">Settings</h1></div>
+      <form class="card form" id="settings-form" novalidate>
+        <h2>Delivery</h2>
+        <label for="s-fee">Delivery fee (₦)</label>
+        <input id="s-fee" type="number" inputmode="numeric" min="0" step="50">
+        <h2>Bank transfer details</h2>
+        <label for="s-bank">Bank</label>
+        <input id="s-bank" type="text">
+        <label for="s-num">Account number</label>
+        <input id="s-num" type="text" inputmode="numeric">
+        <label for="s-acct">Account name</label>
+        <input id="s-acct" type="text">
+        <button class="btn btn-red" type="submit">Save settings</button>
+      </form>
+      <div class="card">
+        <h2>Account</h2>
+        <p class="muted small" id="who"></p>
+        <button class="btn btn-ghost" type="button" data-signout>Sign out</button>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="Dashboard">
+    <button type="button" data-tab="orders" class="on" aria-current="page">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>Orders<span class="badge-dot" id="new-dot" hidden></span></button>
+    <button type="button" data-tab="sales">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Sales</button>
+    <button type="button" data-tab="menu">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7"/><path d="M12 9v4l2 2M9 2h6"/></svg>Menu</button>
+    <button type="button" data-tab="settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6a7 7 0 0 0 0 2.4l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.1-.4.1-.8.1-1.2z"/></svg>Settings</button>
+  </nav>
+</div>
+
+<!-- Sheet: add order / edit item -->
+<div class="scrim" id="scrim" hidden></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" hidden>
+  <div class="sheet-head">
+    <h2 id="sheet-title">Add order</h2>
+    <button class="icon-btn" type="button" id="sheet-close" aria-label="Close">✕</button>
+  </div>
+  <div class="sheet-body" id="sheet-body"></div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
